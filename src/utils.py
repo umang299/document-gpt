@@ -110,21 +110,20 @@ def upsert(collection, nodes):
     Returns:
         None
     """
-    id = 1
     for node in nodes:
         hash = node.hash
         content = node.text
         page_number = node.metadata['page_label']
         
-        content_metadata = {
-            'id' : hash,
-            'Page_No': page_number,
-            'Page_Text': content
-        }
+        if content != '':
+            content_metadata = {
+                'id' : hash,
+                'Page_No': page_number,
+                'Page_Text': content
+            }
 
-        collection.add(
-            documents=[content],
-            metadatas=[content_metadata],
-            ids=[str(id)]
-        )
-        id += 1
+            collection.add(
+                documents=[content],
+                metadatas=[content_metadata],
+                ids=[str(id)]
+            )
