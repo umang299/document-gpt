@@ -1,8 +1,12 @@
 import os
 import re
 import sys
+import json
 import PyPDF2
+from uuid import uuid4
+from datetime import datetime
 
+from llama_index.llms.base import ChatMessage, MessageRole
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(cwd)
@@ -56,6 +60,43 @@ def preprocess_text(text):
     r = r.replace('\t', ' ')
     result = re.sub(r'\s+', ' ', r)
     return result
+
+def logger(message, role):
+    os.makedirs(os.path.join(cwd, 'conversation'), exist_ok=True)
+
+    payload = {
+            'Id' : str(uuid4()),
+            'Role' : role,
+            'Message' : message,
+            'Timestamp' : datetime.isoformat(datetime.now()),
+        }
+    
+    dst_path = os.path.join(cwd, "conversation", f"{payload['Id']}.json")
+    with open(dst_path, 'w') as f:
+        json.dump(payload, f)
+
+
+def load_conversation(top_n):
+    data_list = []
+    conv_dir = os.path.join(cwd, 'conversation')
+    for filename in os.listdir(conv_dir):
+        if filename.endswith(".json"):
+            file_path = os.path.join(conv_dir, filename)
+            with open(file_path, "r") as file:
+                data = json.load(file)
+                data_list.append(data)
+
+    
+    data_list.sort(key=lambda x: datetime.strptime(x["Timestamp"], "%Y-%m-%dT%H:%M:%S.%f"), reverse=False)
+
+    chat_history = list()
+    for data in data_list[:top_n]:
+        if data['Role'] == MessageRole.USER:
+            chat_history.append(ChatMessage(role=MessageRole.USER, content=data['Message']))
+        else:
+            chat_history.append(ChatMessage(role=MessageRole.ASSISTANT, content=data['Message']))
+
+    return chat_history
 
 
 def upsert(collection, nodes):
