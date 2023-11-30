@@ -1,2 +1,56 @@
-# document-gpt
-Chatbot that can extract knowledge from any document.
+# Document GPT - Setup and Usage Guide
+This guide will walk you through the setup and usage of Document GPT.
+
+```
+Note: This version supports only PDF files. 
+```
+
+## Prerequisites
+Before you begin, ensure you have the following installed on your system:
+    
+    Python (version 3.6 or higher)
+    pip (Python package manager)
+    
+## Installation
+Clone the repository to your local machine using the following command:<br>
+    
+    git clone https://github.com/your-username/your-repo-name.git
+    
+
+Navigate to the project directory:<br>
+    
+    cd your-repo-name
+    
+
+Install the required Python packages by running:<br>
+    
+    pip install -r requirements.txt
+
+
+## Configuration
+Create a file named .env in the project directory.
+
+Open the .env file and add the following configuration information:
+
+    OPENAI_API_KEY=your_openai_api_key
+
+Replace your_openai_api_key with your actual OpenAI API key.
+
+## Usage
+Run the chroma database from the termial using the following command:<br>
+
+    chroma run --path 'storage'
+
+To run the app file, use the following command:<br>
+
+    cd frontend
+    streamlit run app.py
+
+
+The program will will open a chat UI in you web browser. Type your message and press Enter.
+
+The program will retrieve a response from ChromaDB based on your input and display it as the assistant's response.
+
+You can continue the conversation by entering more messages.
+
+To exit the program, go to termial press Ctrl+C.
