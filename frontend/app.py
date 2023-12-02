@@ -7,6 +7,9 @@ from openai import OpenAI
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(cwd)
 
+os.makedirs(name=os.path.join(cwd, 'data'), exist_ok=True)
+os.makedirs(name=os.path.join(cwd, 'conversation'), exist_ok=True)
+
 from src.client import ChromaDBClient
 from src.utils import save_uploaded_file
 from main import get_response, upload
