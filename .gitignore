@@ -3,3 +3,7 @@ __pycache__
 'storage
 chroma.log
 src/__pycache__
+conversation
+.env
+storage
+data
