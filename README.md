@@ -20,14 +20,7 @@ Clone the repository to your local machine using the following command:<br>
 Navigate to the project directory:<br>
     
     cd your-repo-name
-    
 
-Install the required Python packages by running:<br>
-    
-    pip install -r requirements.txt
-
-
-## Configuration
 Create a virtual environment. Run the below command from project directory.
 
     python -m venv <env_name>
@@ -40,7 +33,12 @@ Activate the enviroment
     For linux
     source env_name/bin/activate
 
+Install the required Python packages by running:<br>
+    
+    pip install -r requirements.txt
 
+
+## Configuration
 Create a file named .env in the project directory.
 
 Open the .env file and add the following configuration information:
