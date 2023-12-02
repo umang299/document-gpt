@@ -28,6 +28,19 @@ Install the required Python packages by running:<br>
 
 
 ## Configuration
+Create a virtual environment. Run the below command from project directory.
+
+    python -m venv <env_name>
+
+Activate the enviroment
+
+    For windows
+    .\\env_name\\Scripts\\Activate
+
+    For linux
+    source env_name/bin/activate
+
+
 Create a file named .env in the project directory.
 
 Open the .env file and add the following configuration information:
