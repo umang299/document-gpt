@@ -48,8 +48,6 @@ from llama_index.node_parser import TokenTextSplitter
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(cwd)
 
-from src.utils import upsert
-
 
 class ChromaDBClient:
     """
