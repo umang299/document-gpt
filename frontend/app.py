@@ -11,10 +11,12 @@ os.makedirs(name=os.path.join(cwd, 'data'), exist_ok=True)
 os.makedirs(name=os.path.join(cwd, 'conversation'), exist_ok=True)
 
 from src.client import ChromaDBClient
-from src.utils import save_uploaded_file
+from src.utils import save_uploaded_file, is_api_key_valid
 from main import get_response, upload
 
 env_path = os.path.join(cwd, '.env')
+api_status = is_api_key_valid()
+st.write(f'API Key Status : {api_status}')
 api_key = dotenv.dotenv_values(env_path)['OPENAI_API_KEY']
 client = ChromaDBClient(openai_api_key=api_key)
 
