@@ -2,6 +2,8 @@ import os
 import re
 import sys
 import json
+import yaml
+import openai
 import PyPDF2
 from uuid import uuid4
 from datetime import datetime
@@ -10,6 +12,21 @@ from llama_index.llms.base import ChatMessage, MessageRole
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(cwd)
+
+
+def load_yaml_file(filename):
+    """
+    Load data from a YAML file.
+
+    Args:
+    filename (str): The path to the YAML file.
+
+    Returns:
+    dict: The data loaded from the YAML file.
+    """
+    with open(filename, 'r') as file:
+        data = yaml.safe_load(file)
+    return data
 
 
 def save_uploaded_file(uploadedfile):
@@ -127,3 +144,24 @@ def upsert(collection, nodes):
                 metadatas=[content_metadata],
                 ids=[str(id)]
             )
+
+def is_api_key_valid():
+    env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    openai.api_key = env['OPENAI_API_KEY']
+
+    try:
+        response = openai.chat.completions.create(
+                                model='gpt-3.5-turbo',
+                                messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": "Knock knock."},
+                            {"role": "assistant", "content": "Who's there?"},
+                            {"role": "user", "content": "Orange."},
+                        ],
+                            temperature=0,
+                        )
+    except:
+        return False
+    
+    else:
+        return True
