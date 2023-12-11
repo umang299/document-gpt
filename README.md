@@ -39,13 +39,11 @@ Install the required Python packages by running:<br>
 
 
 ## Configuration
-Create a file named .env in the project directory.
+Open the config.yaml file and add the following configuration information:
 
-Open the .env file and add the following configuration information:
+    OPENAI_API_KEY: "your_api_key"
 
-    OPENAI_API_KEY=your_openai_api_key
-
-Replace your_openai_api_key with your actual OpenAI API key.
+Replace your_api_key with your actual OpenAI API key.
 
 ## Usage
 Run the chroma database from the termial using the following command:<br>
