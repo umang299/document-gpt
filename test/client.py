@@ -11,6 +11,7 @@ from src.utils import load_yaml_file
 
 conf = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
 
+
 class TestChromaDBClient(unittest.TestCase):
     def setUp(self):
         self.client = ChromaDBClient(openai_api_key=conf['OPENAI_API_KEY'])
@@ -28,5 +29,7 @@ class TestChromaDBClient(unittest.TestCase):
         collection = self.client.create_collection(conf['new_collection_name'])
         self.assertEqual(collection, conf['new_collection_name'])
 
+
 if __name__ == '__main__':
     unittest.main()
+    
