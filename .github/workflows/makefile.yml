@@ -23,5 +23,4 @@ jobs:
 
     # Run linting
     - name: Run linting
-      run: flake8 src
-      run: flake8 test
+      run: flake8 src test
