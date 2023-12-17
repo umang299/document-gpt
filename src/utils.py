@@ -8,7 +8,8 @@ import PyPDF2
 from uuid import uuid4
 from datetime import datetime
 
-from llama_index.llms.base import ChatMessage, MessageRole
+from llama_index.llms.base import ChatMessage
+from llama_index.llms.types import MessageRole
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(cwd)
