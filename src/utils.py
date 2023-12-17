@@ -35,6 +35,7 @@ def save_uploaded_file(uploadedfile):
         f.write(uploadedfile.getbuffer())
     return os.path.join(cwd, 'data', uploadedfile.name)
 
+
 def extract_text_from_pdf(pdf_file_path):
     """
     Extract text from a PDF file.
@@ -43,7 +44,8 @@ def extract_text_from_pdf(pdf_file_path):
         pdf_file_path (str): The path to the PDF file to be processed.
 
     Returns:
-        list: A list of dictionaries containing extracted text and page numbers.
+        list: A list of dictionaries containing extracted text and page
+              numbers.
             Each dictionary has two keys: 'Page_No' and 'Page_Text'.
     """
     try:
@@ -79,16 +81,17 @@ def preprocess_text(text):
     result = re.sub(r'\s+', ' ', r)
     return result
 
+
 def logger(message, role):
     os.makedirs(os.path.join(cwd, 'conversation'), exist_ok=True)
 
     payload = {
-            'Id' : str(uuid4()),
-            'Role' : role,
-            'Message' : message,
-            'Timestamp' : datetime.isoformat(datetime.now()),
+            'Id': str(uuid4()),
+            'Role': role,
+            'Message': message,
+            'Timestamp': datetime.isoformat(datetime.now()),
         }
-    
+
     dst_path = os.path.join(cwd, "conversation", f"{payload['Id']}.json")
     with open(dst_path, 'w') as f:
         json.dump(payload, f)
@@ -104,15 +107,21 @@ def load_conversation(top_n):
                 data = json.load(file)
                 data_list.append(data)
 
-    
-    data_list.sort(key=lambda x: datetime.strptime(x["Timestamp"], "%Y-%m-%dT%H:%M:%S.%f"), reverse=False)
+    data_list.sort(
+        key=lambda x: datetime.strptime(
+            x["Timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
+            ),
+        reverse=False
+        )
 
     chat_history = list()
     for data in data_list[:top_n]:
         if data['Role'] == MessageRole.USER:
-            chat_history.append(ChatMessage(role=MessageRole.USER, content=data['Message']))
+            chat_history.append(ChatMessage(role=MessageRole.USER,
+                                            content=data['Message']))
         else:
-            chat_history.append(ChatMessage(role=MessageRole.ASSISTANT, content=data['Message']))
+            chat_history.append(ChatMessage(role=MessageRole.ASSISTANT,
+                                            content=data['Message']))
 
     return chat_history
 
@@ -122,7 +131,8 @@ def upsert(collection, nodes):
     Upsert (insert or update) text data into a collection.
 
     Args:
-        collection (chromadb.Collection): The ChromaDB collection to upsert data into.
+        collection (chromadb.Collection): The ChromaDB collection to upsert
+        data into.
         text (list): A list of dictionaries containing text data to upsert.
 
     Returns:
@@ -132,10 +142,10 @@ def upsert(collection, nodes):
         hash = node.hash
         content = node.text
         page_number = node.metadata['page_label']
-        
+
         if content != '':
             content_metadata = {
-                'id' : hash,
+                'id': hash,
                 'Page_No': page_number,
                 'Page_Text': content
             }
@@ -146,23 +156,25 @@ def upsert(collection, nodes):
                 ids=[str(id)]
             )
 
+
 def is_api_key_valid():
     env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
     openai.api_key = env['OPENAI_API_KEY']
 
     try:
-        response = openai.chat.completions.create(
-                                model='gpt-3.5-turbo',
-                                messages=[
-                            {"role": "system", "content": "You are a helpful assistant."},
-                            {"role": "user", "content": "Knock knock."},
-                            {"role": "assistant", "content": "Who's there?"},
-                            {"role": "user", "content": "Orange."},
-                        ],
-                            temperature=0,
-                        )
-    except:
+        openai.chat.completions.create(
+                model='gpt-3.5-turbo',
+                messages=[
+                    {"role": "system", "content": "You are a helpful" +
+                      "assistant."},
+                    {"role": "user", "content": "Knock knock."},
+                    {"role": "assistant", "content": "Who's there?"},
+                    {"role": "user", "content": "Orange."}],
+                temperature=0,
+        )
+
+    except ValueError:
         return False
-    
+
     else:
         return True
