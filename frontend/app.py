@@ -15,7 +15,7 @@ st.write(f'API Key Status : {api_status}')
 
 api_key = load_yaml_file(
     filename=os.path.join(cwd, 'config.yaml')
-    )['OPENAI_API_KEY']
+    )[0]['OPENAI_API_KEY']
 
 client = ChromaDBClient(openai_api_key=api_key)
 
