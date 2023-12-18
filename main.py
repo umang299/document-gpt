@@ -99,8 +99,8 @@ def upload(client, file_path):
         None
     """
     start = time.time()
-    collection = client.get_collection('database')
-    nodes = client.load_data(file_path)
+    collection, _ = client.get_collection('database')
+    nodes, _ = client.load_data(file_path)
     upsert(collection=collection, nodes=nodes)
 
     storage_path = os.path.join(cwd, 'storage')
