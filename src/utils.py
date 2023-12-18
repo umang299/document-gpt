@@ -65,7 +65,7 @@ def extract_text_from_pdf(pdf_file_path):
                     'Page_No': str(i + 1),
                     'Page_Text': preprocess_text(page_text),
                 })
-            
+
         end = time.time()
 
         dur = end - start
@@ -179,7 +179,7 @@ def upsert(collection, nodes):
 
 
 def is_api_key_valid():
-    env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    env, _ = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
     openai.api_key = env['OPENAI_API_KEY']
 
     try:
