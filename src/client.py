@@ -56,6 +56,7 @@ Example Usage:
 
 import os
 import sys
+import time
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -174,11 +175,15 @@ class ChromaDBClient:
             embedding_functions.OpenAIEmbeddingFunction: An instance of the
             OpenAI text embedding model.
         """
+        start = time.time()
         model = embedding_functions.OpenAIEmbeddingFunction(
             api_key=self.openai_api_key,
             model_name="text-embedding-ada-002"
         )
-        return model
+        end = time.time()
+
+        dur = end - start
+        return model, dur
 
     def get_collection(self, collection_name):
         """
@@ -190,11 +195,15 @@ class ChromaDBClient:
         Returns:
             chromadb.Collection: An instance of the requested collection.
         """
+        start = time.time()
         collection = self.client.get_or_create_collection(
             name=collection_name,
             embedding_function=self.__embedding_model()
         )
-        return collection
+        end = time.time()
+
+        dur = end - start
+        return collection, dur
 
     def create_collection(self, collection_name):
         """
@@ -208,28 +217,39 @@ class ChromaDBClient:
             chromadb.Collection: An instance of the created or retrieved
             collection.
         """
+        start = time.time()
         collection = self.client.create_collection(
             name=collection_name,
             embedding_function=self.__embedding_model()
         )
-        return collection
+        end = time.time()
+
+        dur = end - start
+        return collection, dur
 
     def __dataloader(self, file_path):
+        start = time.time()
         loader = SimpleDirectoryReader(
                         input_files=[file_path],
                         encoding=self.text_encoding,
                         required_exts=self.required_exts,
                         num_files_limit=self.num_files_limit
                     )
+        end = time.time()
 
-        return loader
+        dur = end - start
+        return loader, dur
 
     def __node_splitter(self):
+        start = time.time()
         splitter = TokenTextSplitter(
                         chunk_size=self.chunk_size,
                         chunk_overlap=self.chunk_overlap
                     )
-        return splitter
+        end = time.time()
+
+        dur = end - start
+        return splitter, dur
 
     def load_data(self, file_path):
         """
@@ -242,12 +262,16 @@ class ChromaDBClient:
         Returns:
             list: A list of data nodes loaded into the database.
         """
+        start = time.time()
         loader = self.__dataloader(file_path=file_path)
         splitter = self.__node_splitter()
 
         documents = loader.load_data()
         nodes = splitter.get_nodes_from_documents(documents=documents)
-        return nodes
+        end = time.time()
+
+        dur = end - start
+        return nodes, dur
 
     def get_info(self, collection_name, n=10):
         """
@@ -262,12 +286,16 @@ class ChromaDBClient:
             dict: A dictionary containing collection information, including
             'count' and 'items'.
         """
+        start = time.time()
         collection = self.client.get_collection(
             name=collection_name,
             embedding_function=self.__embedding_model()
         )
+        end = time.time()
 
+        dur = end - start
         return {
             'count': collection.count(),
-            'items': collection.peek(limit=n)
+            'items': collection.peek(limit=n),
+            'dur': dur
             }
