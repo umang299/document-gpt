@@ -175,15 +175,12 @@ class ChromaDBClient:
             embedding_functions.OpenAIEmbeddingFunction: An instance of the
             OpenAI text embedding model.
         """
-        start = time.time()
         model = embedding_functions.OpenAIEmbeddingFunction(
             api_key=self.openai_api_key,
             model_name="text-embedding-ada-002"
         )
-        end = time.time()
 
-        dur = end - start
-        return model, dur
+        return model
 
     def get_collection(self, collection_name):
         """
