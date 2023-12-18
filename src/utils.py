@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import yaml
+import time
 import openai
 import PyPDF2
 from uuid import uuid4
@@ -25,9 +26,13 @@ def load_yaml_file(filename):
     Returns:
     dict: The data loaded from the YAML file.
     """
+    start = time.time()
     with open(filename, 'r') as file:
         data = yaml.safe_load(file)
-    return data
+    end = time.time()
+
+    dur = end - start
+    return data, dur
 
 
 def save_uploaded_file(uploadedfile):
@@ -49,6 +54,7 @@ def extract_text_from_pdf(pdf_file_path):
             Each dictionary has two keys: 'Page_No' and 'Page_Text'.
     """
     try:
+        start = time.time()
         with open(pdf_file_path, 'rb') as pdf_file:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
             extracted_text = list()
@@ -60,7 +66,10 @@ def extract_text_from_pdf(pdf_file_path):
                     'Page_Text': preprocess_text(page_text),
                 })
 
-            return extracted_text
+        end = time.time()
+
+        dur = end - start
+        return extracted_text, dur
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return None
@@ -76,10 +85,14 @@ def preprocess_text(text):
     Returns:
         str: The preprocessed text.
     """
+    start = time.time()
     r = text.replace("\n", ' ')
     r = r.replace('\t', ' ')
     result = re.sub(r'\s+', ' ', r)
-    return result
+    end = time.time()
+
+    dur = end - start
+    return result, dur
 
 
 def logger(message, role):
@@ -98,6 +111,7 @@ def logger(message, role):
 
 
 def load_conversation(top_n):
+    start = time.time()
     data_list = []
     conv_dir = os.path.join(cwd, 'conversation')
     for filename in os.listdir(conv_dir):
@@ -122,8 +136,10 @@ def load_conversation(top_n):
         else:
             chat_history.append(ChatMessage(role=MessageRole.ASSISTANT,
                                             content=data['Message']))
+    end = time.time()
 
-    return chat_history
+    dur = end - start
+    return chat_history, dur
 
 
 def upsert(collection, nodes):
@@ -138,6 +154,7 @@ def upsert(collection, nodes):
     Returns:
         None
     """
+    start = time.time()
     for node in nodes:
         hash = node.hash
         content = node.text
@@ -155,10 +172,14 @@ def upsert(collection, nodes):
                 metadatas=[content_metadata],
                 ids=[str(id)]
             )
+    end = time.time()
+
+    dur = end - start
+    return dur, len(nodes)
 
 
 def is_api_key_valid():
-    env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    env, _ = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
     openai.api_key = env['OPENAI_API_KEY']
 
     try:
