@@ -24,17 +24,17 @@ st.title("Document GPT")
 with st.sidebar:
     st.title('Upload File')
     uploaded_files = st.file_uploader(
-                label='Choose a PDF file', 
+                label='Choose a PDF file',
                 accept_multiple_files=False
             )
     if uploaded_files is not None:
         file_path = save_uploaded_file(uploaded_files)
         if st.button(label='Upload'):
             with st.spinner(text='Uploading'):
-                upload(
-                    client=client,
-                    file_path=file_path,
-                )
+                upload_time = upload(
+                                client=client,
+                                file_path=file_path,
+                            )
             st.success(body='Data Uploaded', icon='✅')
             os.remove(file_path)
         else:
@@ -60,7 +60,10 @@ if prompt := st.chat_input("What is up?"):
 
     with st.chat_message("assistant"):
         msg = st.session_state.messages[-1]['content']
-        response = get_response(client=client, message=msg)
+        response = get_response(client=client, message=msg)['response']
         st.markdown(response)
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({
+                                    "role": "assistant",
+                                    "content": response
+                                    })
