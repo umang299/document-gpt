@@ -1,8 +1,14 @@
+host: 'localhost'
+port: 8000
+
 logs_dir: 'logs'
 data_dir: 'data'
 conv_dir: 'conversation'
 
+chunk_size: 512
+chunk_overlap: 25
+top_n: 10
+
 
 OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 collection_name: 'database'
-new_collection_name: 'new_database'
