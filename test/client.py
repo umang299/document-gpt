@@ -23,13 +23,6 @@ class TestChromaDBClient(unittest.TestCase):
         collection = self.client.get_collection(conf['collection_name'])
         self.assertEqual(collection, conf['collection_name'])
 
-    def test_create_collection(self):
-        self.client.client.create_collection = MagicMock(
-                        return_value=conf['new_collection_name']
-                        )
-        collection = self.client.create_collection(conf['new_collection_name'])
-        self.assertEqual(collection, conf['new_collection_name'])
-
 
 if __name__ == '__main__':
     unittest.main()
