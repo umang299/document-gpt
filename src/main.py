@@ -26,7 +26,7 @@ Example Usage:
     print(f"Response: {response}")
 
     file_path = 'data.json'
-    upload(client=client, file_path=file_path)  
+    upload(client=client, file_path=file_path)
 """
 
 import os
