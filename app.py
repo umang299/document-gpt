@@ -3,21 +3,19 @@ import streamlit as st
 
 from src.client import ChromaDBClient
 from src.utils import save_uploaded_file, is_api_key_valid, load_yaml_file
-from main import get_response, upload
+from src.main import get_response, upload
 
 
-cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-os.makedirs(name=os.path.join(cwd, 'data'), exist_ok=True)
-os.makedirs(name=os.path.join(cwd, 'conversation'), exist_ok=True)
+cwd = os.getcwd()
 
 api_status = is_api_key_valid()
 st.write(f'API Key Status : {api_status}')
 
-api_key = load_yaml_file(
+config = load_yaml_file(
     filename=os.path.join(cwd, 'config.yaml')
-    )[0]['OPENAI_API_KEY']
+    )[0]
 
-client = ChromaDBClient(openai_api_key=api_key)
+client = ChromaDBClient(openai_api_key=config['OPENAI_API_KEY'])
 
 st.title("Document GPT")
 
