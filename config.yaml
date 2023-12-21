@@ -1,3 +1,8 @@
-OPENAI_API_KEY: "your_api_key"
+logs_dir: 'logs'
+data_dir: 'data'
+conv_dir: 'conversation'
+
+
+OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 collection_name: 'database'
 new_collection_name: 'new_database'

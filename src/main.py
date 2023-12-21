@@ -26,18 +26,22 @@ Example Usage:
     print(f"Response: {response}")
 
     file_path = 'data.json'
-    upload(client=client, file_path=file_path)
+    upload(client=client, file_path=file_path)  
 """
 
 import os
+import sys
 import time
 import chromadb
 
 from llama_index.vector_stores import ChromaVectorStore
 from llama_index import VectorStoreIndex, ServiceContext
-from src.utils import upsert, logger, load_conversation
+
+from .utils import upsert, logger, load_conversation
+from .logger import logging
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(cwd)
 
 
 def get_response(client, message):
@@ -76,13 +80,9 @@ def get_response(client, message):
     logger(message=agent_response.response, role='assistant')
 
     dur = (end - start)
+    logging.info(msg=f'Response time: {dur/1000}')
     return {
             'response': agent_response.response,
-            'duration': {
-                        'time': dur,
-                        'conv_dur': conv_dur,
-                        'col_dur': col_dur
-                        }
             }
 
 
@@ -108,4 +108,5 @@ def upload(client, file_path):
     end = time.time()
 
     dur = end - start
+    logging.info(msg=f'Execution time: {dur/1000}')
     return dur

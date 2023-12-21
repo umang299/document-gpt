@@ -36,7 +36,14 @@ def load_yaml_file(filename):
 
 
 def save_uploaded_file(uploadedfile):
-    with open(os.path.join(cwd, 'data', uploadedfile.name), "wb") as f:
+    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    os.makedirs(os.path.join(cwd, config['data_dir']), exist_ok=True)
+
+    with open(os.path.join(
+                        cwd,
+                        config['data_dir'],
+                        uploadedfile.name), "wb") as f:
+
         f.write(uploadedfile.getbuffer())
     return os.path.join(cwd, 'data', uploadedfile.name)
 
@@ -96,7 +103,9 @@ def preprocess_text(text):
 
 
 def logger(message, role):
-    os.makedirs(os.path.join(cwd, 'conversation'), exist_ok=True)
+    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    os.makedirs(os.path.join(cwd, config['conv_dir']),
+                exist_ok=True)
 
     payload = {
             'Id': str(uuid4()),
@@ -111,9 +120,13 @@ def logger(message, role):
 
 
 def load_conversation(top_n):
+    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    os.makedirs(os.path.join(cwd, config['conv_dir']),
+                exist_ok=True)
+
     start = time.time()
     data_list = []
-    conv_dir = os.path.join(cwd, 'conversation')
+    conv_dir = os.path.join(cwd, config['conv_dir'])
     for filename in os.listdir(conv_dir):
         if filename.endswith(".json"):
             file_path = os.path.join(conv_dir, filename)
