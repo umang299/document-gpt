@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import json
 import yaml
 import time
@@ -11,9 +10,9 @@ from datetime import datetime
 
 from llama_index.llms.base import ChatMessage
 from llama_index.llms.types import MessageRole
+from .logger import logging
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(cwd)
 
 
 def load_yaml_file(filename):
@@ -26,26 +25,34 @@ def load_yaml_file(filename):
     Returns:
     dict: The data loaded from the YAML file.
     """
-    start = time.time()
-    with open(filename, 'r') as file:
-        data = yaml.safe_load(file)
-    end = time.time()
+    try:
+        with open(filename, 'r') as file:
+            data = yaml.safe_load(file)
 
-    dur = end - start
-    return data, dur
+        return data
+
+    except Exception as e:
+        logging.error(f'Load yaml file: {e}')
+        return None
 
 
 def save_uploaded_file(uploadedfile):
-    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
-    os.makedirs(os.path.join(cwd, config['data_dir']), exist_ok=True)
+    try:
+        config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+        os.makedirs(os.path.join(cwd, config['data_dir']), exist_ok=True)
 
-    with open(os.path.join(
-                        cwd,
-                        config['data_dir'],
-                        uploadedfile.name), "wb") as f:
+        with open(os.path.join(
+                            cwd,
+                            config['data_dir'],
+                            uploadedfile.name), "wb") as f:
 
-        f.write(uploadedfile.getbuffer())
-    return os.path.join(cwd, 'data', uploadedfile.name)
+            f.write(uploadedfile.getbuffer())
+
+        return os.path.join(cwd, 'data', uploadedfile.name)
+
+    except Exception as e:
+        logging.error(f'Save uploade file: {e}')
+        return None
 
 
 def extract_text_from_pdf(pdf_file_path):
@@ -77,8 +84,9 @@ def extract_text_from_pdf(pdf_file_path):
 
         dur = end - start
         return extracted_text, dur
+
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        logging.error(f"Extract text from pdf: {str(e)}")
         return None
 
 
@@ -92,67 +100,86 @@ def preprocess_text(text):
     Returns:
         str: The preprocessed text.
     """
-    start = time.time()
-    r = text.replace("\n", ' ')
-    r = r.replace('\t', ' ')
-    result = re.sub(r'\s+', ' ', r)
-    end = time.time()
+    try:
+        start = time.time()
+        r = text.replace("\n", ' ')
+        r = r.replace('\t', ' ')
+        result = re.sub(r'\s+', ' ', r)
+        end = time.time()
+        dur = end - start
+        logging.info(f'text preprocessing: Execution time {dur}')
 
-    dur = end - start
-    return result, dur
+        return result
+
+    except Exception as e:
+        logging.error(f'text preprocessing: {e}')
+        return None
 
 
 def logger(message, role):
-    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
-    os.makedirs(os.path.join(cwd, config['conv_dir']),
-                exist_ok=True)
+    try:
+        config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+        os.makedirs(os.path.join(cwd, config['conv_dir']),
+                    exist_ok=True)
 
-    payload = {
-            'Id': str(uuid4()),
-            'Role': role,
-            'Message': message,
-            'Timestamp': datetime.isoformat(datetime.now()),
-        }
+        payload = {
+                'Id': str(uuid4()),
+                'Role': role,
+                'Message': message,
+                'Timestamp': datetime.isoformat(datetime.now()),
+            }
 
-    dst_path = os.path.join(cwd, "conversation", f"{payload['Id']}.json")
-    with open(dst_path, 'w') as f:
-        json.dump(payload, f)
+        dst_path = os.path.join(cwd, "conversation", f"{payload['Id']}.json")
+        with open(dst_path, 'w') as f:
+            json.dump(payload, f)
+
+    except Exception as e:
+        logging.error(f'Logging error: {e}')
+        return None
 
 
-def load_conversation(top_n):
-    config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
-    os.makedirs(os.path.join(cwd, config['conv_dir']),
-                exist_ok=True)
+def load_conversation():
+    try:
+        config = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+        top_n = config['top_n']
+        os.makedirs(os.path.join(cwd, config['conv_dir']),
+                    exist_ok=True)
 
-    start = time.time()
-    data_list = []
-    conv_dir = os.path.join(cwd, config['conv_dir'])
-    for filename in os.listdir(conv_dir):
-        if filename.endswith(".json"):
-            file_path = os.path.join(conv_dir, filename)
-            with open(file_path, "r") as file:
-                data = json.load(file)
-                data_list.append(data)
+        start = time.time()
+        data_list = []
+        conv_dir = os.path.join(cwd, config['conv_dir'])
+        for filename in os.listdir(conv_dir):
+            if filename.endswith(".json"):
+                file_path = os.path.join(conv_dir, filename)
+                with open(file_path, "r") as file:
+                    data = json.load(file)
+                    data_list.append(data)
 
-    data_list.sort(
-        key=lambda x: datetime.strptime(
-            x["Timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
-            ),
-        reverse=False
-        )
+        data_list.sort(
+            key=lambda x: datetime.strptime(
+                x["Timestamp"], "%Y-%m-%dT%H:%M:%S.%f"
+                ),
+            reverse=False
+            )
 
-    chat_history = list()
-    for data in data_list[:top_n]:
-        if data['Role'] == MessageRole.USER:
-            chat_history.append(ChatMessage(role=MessageRole.USER,
-                                            content=data['Message']))
-        else:
-            chat_history.append(ChatMessage(role=MessageRole.ASSISTANT,
-                                            content=data['Message']))
-    end = time.time()
+        chat_history = list()
+        for data in data_list[:top_n]:
+            if data['Role'] == MessageRole.USER:
+                chat_history.append(ChatMessage(role=MessageRole.USER,
+                                                content=data['Message']))
+            else:
+                chat_history.append(ChatMessage(role=MessageRole.ASSISTANT,
+                                                content=data['Message']))
+        end = time.time()
 
-    dur = end - start
-    return chat_history, dur
+        dur = end - start
+        logging.info(f'Load conversation: Execution time {dur}')
+
+        return chat_history
+
+    except Exception as e:
+        logging.info(f'Load conversation: {e}')
+        return None
 
 
 def upsert(collection, nodes):
@@ -167,32 +194,37 @@ def upsert(collection, nodes):
     Returns:
         None
     """
-    start = time.time()
-    for node in nodes:
-        hash = node.hash
-        content = node.text
-        page_number = node.metadata['page_label']
+    try:
+        start = time.time()
+        for node in nodes:
+            hash = node.hash
+            content = node.text
+            page_number = node.metadata['page_label']
 
-        if content != '':
-            content_metadata = {
-                'id': hash,
-                'Page_No': page_number,
-                'Page_Text': content
-            }
+            if content != '':
+                content_metadata = {
+                    'id': hash,
+                    'Page_No': page_number,
+                    'Page_Text': content
+                }
 
-            collection.add(
-                documents=[content],
-                metadatas=[content_metadata],
-                ids=[str(id)]
-            )
-    end = time.time()
+                collection.add(
+                    documents=[content],
+                    metadatas=[content_metadata],
+                    ids=[str(id)]
+                )
+        end = time.time()
 
-    dur = end - start
-    return dur, len(nodes)
+        dur = end - start
+        return dur, len(nodes)
+
+    except Exception as e:
+        logging.error(f'Upsert Error: {e}')
+        return None
 
 
 def is_api_key_valid():
-    env, _ = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
+    env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
     openai.api_key = env['OPENAI_API_KEY']
 
     try:
