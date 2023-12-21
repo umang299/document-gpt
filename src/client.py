@@ -55,7 +55,6 @@ Example Usage:
 """
 
 import os
-import sys
 import time
 import chromadb
 from chromadb.utils import embedding_functions
@@ -63,8 +62,10 @@ from chromadb.utils import embedding_functions
 from llama_index import SimpleDirectoryReader
 from llama_index.node_parser import TokenTextSplitter
 
+from .utils import load_yaml_file
+from .logger import logging
+
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(cwd)
 
 
 class ChromaDBClient:
@@ -112,8 +113,6 @@ class ChromaDBClient:
                  encoding: str = None,
                  required_ext: list = None,
                  num_files_limit: int = None,
-                 chunk_size: int = None,
-                 chunk_overlap: int = None,
                  host: str = 'localhost',
                  port: int = 8000):
         """
@@ -150,8 +149,9 @@ class ChromaDBClient:
         else:
             self.num_files_limit = num_files_limit
 
-        self.chunk_size = 512 if chunk_size is None else chunk_size
-        self.chunk_overlap = 25 if chunk_overlap is None else chunk_overlap
+        self.config = load_yaml_file(filename=os.path.join(
+            cwd, 'config.yaml'
+        ))
         self.client = self.__initialize_client()
 
     def __initialize_client(self):
@@ -161,11 +161,15 @@ class ChromaDBClient:
         Returns:
             chromadb.HttpClient: An instance of the ChromaDB HTTP client.
         """
-        client = chromadb.HttpClient(
-            host=self.host,
-            port=self.port
-        )
-        return client
+        try:
+            client = chromadb.HttpClient(
+                host=self.host,
+                port=self.port
+            )
+            return client
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def __embedding_model(self):
         """
@@ -175,12 +179,15 @@ class ChromaDBClient:
             embedding_functions.OpenAIEmbeddingFunction: An instance of the
             OpenAI text embedding model.
         """
-        model = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=self.openai_api_key,
-            model_name="text-embedding-ada-002"
-        )
+        try:
+            model = embedding_functions.OpenAIEmbeddingFunction(
+                api_key=self.openai_api_key,
+                model_name="text-embedding-ada-002"
+            )
+            return model
 
-        return model
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def get_collection(self, collection_name):
         """
@@ -192,15 +199,21 @@ class ChromaDBClient:
         Returns:
             chromadb.Collection: An instance of the requested collection.
         """
-        start = time.time()
-        collection = self.client.get_or_create_collection(
-            name=collection_name,
-            embedding_function=self.__embedding_model()
-        )
-        end = time.time()
+        try:
+            start = time.time()
+            collection = self.client.get_or_create_collection(
+                name=collection_name,
+                embedding_function=self.__embedding_model()
+            )
+            end = time.time()
 
-        dur = end - start
-        return collection, dur
+            dur = end - start
+            logging.info(f'get_collection, Executed in {dur} seconds')
+
+            return collection
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def create_collection(self, collection_name):
         """
@@ -214,41 +227,52 @@ class ChromaDBClient:
             chromadb.Collection: An instance of the created or retrieved
             collection.
         """
-        start = time.time()
-        collection = self.client.create_collection(
-            name=collection_name,
-            embedding_function=self.__embedding_model()
-        )
-        end = time.time()
+        try:
+            collection = self.client.create_collection(
+                name=collection_name,
+                embedding_function=self.__embedding_model()
+            )
 
-        dur = end - start
-        return collection, dur
+            return collection
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def __dataloader(self, file_path):
-        start = time.time()
-        loader = SimpleDirectoryReader(
-                        input_files=[file_path],
-                        encoding=self.text_encoding,
-                        required_exts=self.required_exts,
-                        num_files_limit=self.num_files_limit
-                    )
-        end = time.time()
+        try:
+            start = time.time()
+            loader = SimpleDirectoryReader(
+                            input_files=[file_path],
+                            encoding=self.text_encoding,
+                            required_exts=self.required_exts,
+                            num_files_limit=self.num_files_limit
+                        )
+            end = time.time()
+            dur = end - start
+            logging.info(f'dataloader, Executed in {dur} seconds')
 
-        dur = end - start
-        return loader, dur
+            return loader
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def __node_splitter(self):
-        start = time.time()
-        splitter = TokenTextSplitter(
-                        chunk_size=self.chunk_size,
-                        chunk_overlap=self.chunk_overlap
-                    )
-        end = time.time()
+        try:
+            start = time.time()
+            splitter = TokenTextSplitter(
+                            chunk_size=self.config['chunk_size'],
+                            chunk_overlap=self.config['chunk_overlap']
+                        )
+            end = time.time()
+            dur = end - start
+            logging.info(f'node_splitter, Executed in {dur} seconds')
 
-        dur = end - start
-        return splitter, dur
+            return splitter
 
-    def load_data(self, file_path):
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
+
+    def load(self, file_path):
         """
         Load data from a file into ChromaDB.
 
@@ -259,16 +283,21 @@ class ChromaDBClient:
         Returns:
             list: A list of data nodes loaded into the database.
         """
-        start = time.time()
-        loader = self.__dataloader(file_path=file_path)
-        splitter = self.__node_splitter()
+        try:
+            start = time.time()
+            loader = self.__dataloader(file_path=file_path)
+            splitter = self.__node_splitter()
 
-        documents = loader.load_data()
-        nodes = splitter.get_nodes_from_documents(documents=documents)
-        end = time.time()
+            documents = loader.load_data()
+            nodes = splitter.get_nodes_from_documents(documents=documents)
+            end = time.time()
+            dur = end - start
+            logging.info(f'loaded data, Executed in {dur} seconds')
 
-        dur = end - start
-        return nodes, dur
+            return nodes
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
 
     def get_info(self, collection_name, n=10):
         """
@@ -283,16 +312,39 @@ class ChromaDBClient:
             dict: A dictionary containing collection information, including
             'count' and 'items'.
         """
-        start = time.time()
-        collection = self.client.get_collection(
-            name=collection_name,
-            embedding_function=self.__embedding_model()
-        )
-        end = time.time()
+        try:
+            start = time.time()
+            collection = self.client.get_collection(
+                name=collection_name,
+                embedding_function=self.__embedding_model()
+            )
+            end = time.time()
 
-        dur = end - start
-        return {
-            'count': collection.count(),
-            'items': collection.peek(limit=n),
-            'dur': dur
-            }
+            dur = end - start
+
+            return {
+                'count': collection.count(),
+                'items': collection.peek(limit=n),
+                'dur': dur
+                }
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
+
+    def get_all_collections(self):
+        try:
+            client = self.__initialize_client()
+            collections = client.list_collections()
+            collections = [c.name for c in collections]
+            return collections
+
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
+
+    def delete_collection(self, collection_name):
+        try:
+            client = self.__initialize_client()
+            client.delete_collection(name=collection_name)
+            logging.info(msg=f'Deleted {collection_name} collections')
+        except Exception as e:
+            logging.error(msg=f'Error: {e}')
