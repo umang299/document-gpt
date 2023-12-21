@@ -30,7 +30,6 @@ Example Usage:
 """
 
 import os
-import sys
 import time
 import chromadb
 
@@ -41,10 +40,9 @@ from .utils import upsert, logger, load_conversation
 from .logger import logging
 
 cwd = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(cwd)
 
 
-def get_response(client, message):
+def get_response(client, collection_name, message):
     """
     Retrieve a response from ChromaDB based on the user's message.
 
@@ -58,7 +56,13 @@ def get_response(client, message):
     """
     start = time.time()
     conversation, conv_dur = load_conversation(top_n=10)
-    collection, col_dur = client.get_collection(collection_name='database')
+    logging.info(msg=f'Loaded conversation history {conv_dur}')
+    collection = client.get_collection(collection_name=collection_name)
+
+    logging.info(
+        msg=f'Creating vector index with collection {collection_name}'
+        )
+
     vector_store = ChromaVectorStore(chroma_collection=collection)
     service_context = ServiceContext.from_defaults(
                                 chunk_size=512, chunk_overlap=25
@@ -69,6 +73,7 @@ def get_response(client, message):
                             service_context=service_context,
                         )
 
+    logging.info('Created vector index')
     chat_engine = index.as_chat_engine()
     logger(message=message, role='user')
 
@@ -80,13 +85,13 @@ def get_response(client, message):
     logger(message=agent_response.response, role='assistant')
 
     dur = (end - start)
-    logging.info(msg=f'Response time: {dur/1000}')
+    logging.info(msg=f'Response time: {dur}')
     return {
             'response': agent_response.response,
             }
 
 
-def upload(client, file_path):
+def upload(client, collection_name, file_path):
     """
     Upload data from a file to the ChromaDB database.
 
@@ -99,8 +104,10 @@ def upload(client, file_path):
         None
     """
     start = time.time()
-    collection, _ = client.get_collection('database')
-    nodes, _ = client.load_data(file_path)
+    collection = client.get_collection(collection_name)
+    logging.info(msg=f'Loaded collection {collection_name}')
+    nodes = client.load(file_path)
+    logging.info(msg=f'Created {len(nodes)} nodes')
     upsert(collection=collection, nodes=nodes)
 
     storage_path = os.path.join(cwd, 'storage')
