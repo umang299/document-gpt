@@ -7,4 +7,4 @@ conversation
 .env
 storage
 data
-Document_GPT.egg-info
+logs
