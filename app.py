@@ -14,9 +14,9 @@ config = load_yaml_file(
     filename=os.path.join(cwd, 'config.yaml')
     )
 
-client = ChromaDBClient(openai_api_key=config['OPENAI_API_KEY'],
-                        host=config['host'],
-                        port=config['port'])
+client = ChromaDBClient(openai_api_key=os.getenv('OPENAI_API_KEY'),
+                        host=os.getenv('HOST'),
+                        port=os.getenv('PORT'))
 
 
 def reset_session():
@@ -28,10 +28,13 @@ st.title("Document GPT")
 
 with st.sidebar:
     st.subheader(body='Database Info')
-    col = st.selectbox(
-                    label='Select collection',
-                    options=client.get_all_collections()
-                    )
+    if client.get_all_collections() != None:
+        col = st.selectbox(
+                        label='Select collection',
+                        options=client.get_all_collections()
+                        )
+    else:
+        st.write("Create a collection")
 
     col_name = st.text_input(label='Name of collection')
     col1, col2 = st.columns(2)
@@ -67,8 +70,13 @@ with st.sidebar:
     else:
         pass
 
-col_info = client.get_info(collection_name=col)
-st.write(f"Collection Name : **{col}**")
+
+try:
+    col_info = client.get_info(collection_name=col)
+    st.write(f"Collection Name : **{col}**")
+except NameError:
+    st.write("Collection Name : **None**")
+
 
 if client.get_all_collections() != []:
     if "openai_model" not in st.session_state:
