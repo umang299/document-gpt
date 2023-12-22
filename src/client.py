@@ -170,6 +170,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def __embedding_model(self):
         """
@@ -188,6 +189,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def get_collection(self, collection_name):
         """
@@ -214,6 +216,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def create_collection(self, collection_name):
         """
@@ -237,6 +240,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def __dataloader(self, file_path):
         try:
@@ -255,6 +259,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def __node_splitter(self):
         try:
@@ -271,6 +276,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def load(self, file_path):
         """
@@ -298,6 +304,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def get_info(self, collection_name, n=10):
         """
@@ -330,6 +337,7 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def get_all_collections(self):
         try:
@@ -340,11 +348,15 @@ class ChromaDBClient:
 
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
 
     def delete_collection(self, collection_name):
         try:
             client = self.__initialize_client()
             client.delete_collection(name=collection_name)
+
             logging.info(msg=f'Deleted {collection_name} collections')
+
         except Exception as e:
             logging.error(msg=f'Error: {e}')
+            return None
