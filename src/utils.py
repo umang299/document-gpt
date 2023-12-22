@@ -224,8 +224,7 @@ def upsert(collection, nodes):
 
 
 def is_api_key_valid():
-    env = load_yaml_file(filename=os.path.join(cwd, 'config.yaml'))
-    openai.api_key = env['OPENAI_API_KEY']
+    openai.api_key = os.getenv('OPENAI_API_KEY')
 
     try:
         openai.chat.completions.create(
