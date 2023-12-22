@@ -11,7 +11,9 @@ conf = load_yaml_file(filename=os.path.join(os.path.dirname(__file__),
 
 class TestChromaDBClient(unittest.TestCase):
     def setUp(self):
-        self.client = ChromaDBClient(openai_api_key=conf['OPENAI_API_KEY'])
+        self.client = ChromaDBClient(
+            openai_api_key=os.getenv('OPENAI_API_KEY')
+            )
 
     def test_initialize_client(self):
         self.assertIsNotNone(self.client)
