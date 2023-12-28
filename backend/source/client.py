@@ -1,3 +1,4 @@
+import os
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -18,9 +19,10 @@ class ChromaDBClient:
                  ):
 
         self.config = load_yaml_file(filename=CONFIG_PATH)
-        self.openai_api_key = self.config['OPENAI_API_KEY']
-        self.host = self.config['HOST']
-        self.port = self.config['PORT']
+        self.openai_api_key = os.getenv('OPENAI_API_KEY')
+        self.host = os.getenv('HOST')
+        self.port = os.getenv('PORT')
+
         self.text_encoding = 'utf-8' if encoding == '' else encoding
         self.required_exts = ['.pdf'] if required_ext is [] else required_ext
 
