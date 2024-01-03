@@ -6,11 +6,7 @@ from datetime import datetime
 
 from llama_index.llms.base import ChatMessage
 from llama_index.llms.types import MessageRole
-from llama_index.vector_stores import ChromaVectorStore
-from llama_index import VectorStoreIndex, ServiceContext
 
-
-from .log import logging
 from .config import CONFIG_PATH, CONV_DIR
 
 
@@ -27,7 +23,7 @@ def load_yaml_file(filename):
         return data
 
     except Exception as e:
-        logging.error(f'Failed to load file {filename}: {e}')
+        print(e)
         return None
 
 
@@ -65,7 +61,7 @@ def load_conversation():
         return chat_history
 
     except Exception as e:
-        logging.error(f'Failed to load conversation: {e}')
+        print(e)
         return None
 
 
@@ -96,61 +92,5 @@ def conversation_logger(message, role):
             json.dump(payload, f)
 
     except Exception as e:
-        logging.error(f'Failed to log conversation: {e}')
+        print(e)
         return None
-
-
-def upsert(collection, nodes):
-    try:
-        for node in nodes:
-            hash = node.hash
-            content = node.text
-            page_number = node.metadata['page_label']
-
-            if content != '':
-                content_metadata = {
-                    'id': hash,
-                    'Page_No': page_number,
-                    'Page_Text': content
-                }
-
-                collection.add(
-                    documents=[content],
-                    metadatas=[content_metadata],
-                    ids=[str(id)]
-                )
-
-        return True
-
-    except Exception as e:
-        logging.error(f'Failed to upload data: {e}')
-        return None
-
-
-def get_response(client, message, collection_name):
-    conversation = load_conversation()
-    config = load_yaml_file(filename=CONFIG_PATH)
-    collection = client.get_collection(collection_name=collection_name)
-
-    vector_store = ChromaVectorStore(chroma_collection=collection)
-    service_context = ServiceContext.from_defaults(
-                                chunk_size=config['CHUNK_SIZE'],
-                                chunk_overlap=config['CHUNK_OVERLAP']
-                                )
-
-    index = VectorStoreIndex.from_vector_store(
-                            vector_store=vector_store,
-                            service_context=service_context,
-                        )
-
-    chat_engine = index.as_chat_engine()
-    conversation_logger(message=message, role='user')
-
-    agent_response = chat_engine.chat(
-                            message=message,
-                            chat_history=conversation
-                        )
-    conversation_logger(message=agent_response.response, role='assistant')
-    return {
-            'response': agent_response.response
-            }
